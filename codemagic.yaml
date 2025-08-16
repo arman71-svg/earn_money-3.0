@@ -1,0 +1,30 @@
+workflows:
+  release-apk:
+    name: Release APK
+    environment:
+      flutter: stable
+      vars:
+        ANDROID_PACKAGE: "com.armangamesstudio.EarnMoney"
+    scripts:
+      - name: Install Flutter deps
+        script: flutter pub get
+      - name: Set up signing
+        script: |
+          echo "storePassword=$KEYSTORE_PASSWORD" >> "$CM_BUILD_DIR/android/key.properties"
+          echo "keyPassword=$KEY_PASSWORD" >> "$CM_BUILD_DIR/android/key.properties"
+          echo "keyAlias=$KEY_ALIAS" >> "$CM_BUILD_DIR/android/key.properties"
+          echo "storeFile=$CM_BUILD_DIR/android/keystore.jks" >> "$CM_BUILD_DIR/android/key.properties"
+      - name: Pull keystore & google-services.json
+        script: |
+          echo "Fetching secure files"
+          mv "$CM_SECURE_DIR/keystore.jks" "$CM_BUILD_DIR/android/keystore.jks"
+          mkdir -p "$CM_BUILD_DIR/android/app"
+          mv "$CM_SECURE_DIR/google-services.json" "$CM_BUILD_DIR/android/app/google-services.json"
+      - name: Build release APK
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+    publishing:
+      email:
+        recipients:
+          - your@email.com
